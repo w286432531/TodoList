@@ -7,16 +7,17 @@ const app = express();
 const _ = require('lodash');
 // setup schema
 const { Schema } = mongoose;
-// connect mongoDB
+// connect to mongoDB Atlas
 mongoose.connect('mongodb+srv://jay:w3213586@cluster0.iwwxk.mongodb.net/todolistDB?retryWrites=true&w=majority', {useNewUrlParser: true, useUnifiedTopology: true});
+// use ejs
 app.set('view engine', 'ejs');
 // add bodyParser
 app.use(bodyParser.urlencoded({extended: true}));
 // add resourse
 app.use(express.static("public"));
-
+// add this for findOneAndUpdate to work
 mongoose.set('useFindAndModify', false);
-// create Schema
+// create Schema for items
 const itemsSchema = new Schema({
   name: String
 });
@@ -69,44 +70,65 @@ app.get("/", function(req, res) {
 
 
 });
-
+// set up post route
 app.post("/", function(req, res){
-
+// get new item from page
   const itemName = req.body.newItem;
+  // get the list title name from page
   const listName = req.body.list;
+  // create new item to save in database
   const newItem = new Item({
     name: itemName
   });
+  // check where post route was send. home route is "Today"
   if (listName=== "Today"){
+    // saving new item to items collection when it's home route
     newItem.save((err)=> {if (err) return console.error(err)});
+    // redirect to home after saving data
     res.redirect("/");
   } else {
+    // if the page is not home find the list with current page name
     List.findOne({name:listName},(err,result)=>{
+      // add to the list.items
       result.items.push(newItem);
+      // save to database
       result.save();
+      // redirect after saving to database
       res.redirect("/"+ listName);
     });
   }
 });
+// create a delete post when checkbox is checked
 app.post("/delete", function(req,res){
+  // get the id for the checked item
   const checkedItemId= req.body.checkbox;
+  // get the page name for the checked item
   const listName= req.body.listName;
-
+// if page name is home which is "Today"
   if (listName==="Today"){
+    // find and remove in the items collection
     Item.findByIdAndRemove(checkedItemId,(err)=>{
+      // check for error
       if (err) {
         return console.error(err);
       };
     });
-    res.redirect("/");
-  } else {
+    // redirect after delete
+    res.redirect("/");  }
+   // if it's not home page
+  else {
+    // find the list and update data
     List.findOneAndUpdate(
+      // find the list with page name
       {name:listName},
+      // use $pull method to take out a piece of data
       {$pull:{items:{_id:checkedItemId}}},
+      // callback to check for error
       (err,result)=>{
         if (err){
           return console.error(err);
         } else {
+          // redirect back to the page if there is no error
           res.redirect("/"+ listName);}
       }
     );
@@ -118,17 +140,24 @@ app.post("/delete", function(req,res){
   // });
 
 });
+// set up custom page request
 app.get("/:pageName",(req,res)=>{
+  // make custom page name capitalize
   const pageName= _.capitalize(req.params.pageName);
+  // find list for the page
   List.findOne({name:pageName},(err, result)=>{
+    // if there is no error
     if (!err){
+      // if there is no result
       if (!result) {
         //  Create a new list
         const list= new List({
           name: pageName,
           items: defaultItems
         });
+        // save to the database and check for error
           list.save((err)=> {if (err) return console.error(err)});
+          // redirect to the page after saving
           res.redirect("/" + list.name);
       } else {
         //  show an existing list
@@ -138,8 +167,8 @@ app.get("/:pageName",(req,res)=>{
   });
 
 });
-
-
-app.listen(3000, function() {
-  console.log("Server started on port 3000");
-});
+let port = process.env.PORT;
+if (port == null || port = "") {
+  port = 3000;
+}
+app.listen(port,()=> console.log("Server started"));
