@@ -1,5 +1,5 @@
 //jshint esversion:6
-
+require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
@@ -8,7 +8,7 @@ const _ = require('lodash');
 // setup schema
 const { Schema } = mongoose;
 // connect to mongoDB Atlas
-mongoose.connect('mongodb+srv://jay:w3213586@cluster0.iwwxk.mongodb.net/todolistDB?retryWrites=true&w=majority', {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect(process.env.DATABASE_ADDRESS, {useNewUrlParser: true, useUnifiedTopology: true});
 // use ejs
 app.set('view engine', 'ejs');
 // add bodyParser
