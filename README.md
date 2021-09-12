@@ -1,3 +1,3 @@
 # todo-list
 a todo-list connect to mongoDB atlas
-https://evening-harbor-80038.herokuapp.com/
+https://todo-list-jay-huang.herokuapp.com/
